@@ -1,0 +1,754 @@
+package com.alexnelson.ff;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
+
+public class Round
+{
+	private boolean isStarted = false;
+
+	private String person1;
+	private String person2;
+
+	private String buzzerWinner = null;
+	private Family currentFamily = null;
+
+	private Question question;
+
+	private BufferedImage ans1, ans2, ans3, ans4, ans5, ans6, ans7, ans8 = null;
+	private BufferedImage ans1f, ans2f, ans3f, ans4f, ans5f, ans6f, ans7f, ans8f = null;
+	private boolean answ1, answ2, answ3, answ4, answ5, answ6, answ7, answ8 = false;
+	private boolean rans1, rans2, rans3, rans4, rans5, rans6, rans7, rans8 = false;
+
+	private boolean renderAnswer1, renderAnswer2, renderAnswer3, renderAnswer4, renderAnswer5, renderAnswer6, renderAnswer7, renderAnswer8;
+
+	private BufferedImage strike = null;
+
+	private boolean renderQuestion = false;
+
+	private boolean tick = false;
+	private boolean render = false;
+
+	private boolean renderRed = false;
+	private int renderedRedTimes = 1;
+
+	private long renderedStrikeTime;
+
+	private int strikes = 0;
+
+	private boolean strike1, strike2, strike3 = false;
+
+	public String answer = "";
+
+	private int roundPoints = 0;
+
+	private HashMap<Integer, Answer> answerNums = new HashMap<Integer, Answer>();
+
+	private ArrayList<Answer> foundAnswers = new ArrayList<Answer>();
+
+	public Round()
+	{
+		question = FamilyFued.questions.get(new Random().nextInt(FamilyFued.questions.size()));
+
+		for (int i = 0; i < question.getAnswers().size(); i++)
+		{
+			answerNums.put(i + 1, question.getAnswers().get(i));
+		}
+
+		BufferedImageLoader loader = new BufferedImageLoader();
+		try
+		{
+			ans1 = loader.loadImage("/1.png");
+			ans2 = loader.loadImage("/2.png");
+			ans3 = loader.loadImage("/3.png");
+			ans4 = loader.loadImage("/4.png");
+			ans5 = loader.loadImage("/5.png");
+			ans6 = loader.loadImage("/6.png");
+			ans7 = loader.loadImage("/7.png");
+			ans8 = loader.loadImage("/8.png");
+
+			ans1f = loader.loadImage("/1f.png");
+			ans2f = loader.loadImage("/2f.png");
+			ans3f = loader.loadImage("/3f.png");
+			ans4f = loader.loadImage("/4f.png");
+			ans5f = loader.loadImage("/5f.png");
+			ans6f = loader.loadImage("/6f.png");
+			ans7f = loader.loadImage("/7f.png");
+			ans8f = loader.loadImage("/8f.png");
+
+			strike = loader.loadImage("/strike.png");
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		for (int i = 1; i <= question.getAnswers().size(); i++)
+		{
+			if (i == 1)
+			{
+				answ1 = true;
+			}
+
+			if (i == 2)
+			{
+				answ2 = true;
+			}
+
+			if (i == 3)
+			{
+				answ3 = true;
+			}
+
+			if (i == 4)
+			{
+				answ4 = true;
+			}
+
+			if (i == 5)
+			{
+				answ5 = true;
+			}
+
+			if (i == 6)
+			{
+				answ6 = true;
+			}
+
+			if (i == 7)
+			{
+				answ7 = true;
+			}
+
+			if (i == 8)
+			{
+				answ8 = true;
+			}
+		}
+	}
+
+	public void start()
+	{
+		isStarted = true;
+		tick = true;
+		render = true;
+	}
+
+	public void stop()
+	{
+		tick = false;
+		render = false;
+	}
+
+	int time = 0;
+
+	public void tick()
+	{
+		if (!tick)
+		{
+			return;
+		}
+
+		time++;
+		if (time < 10)
+		{
+			return;
+		}
+
+		time = 0;
+
+		if (answ1)
+		{
+			KeyInput.canType = false;
+
+			rans1 = true;
+			answ1 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ2)
+		{
+			rans2 = true;
+			answ2 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ3)
+		{
+			rans3 = true;
+			answ3 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ4)
+		{
+			rans4 = true;
+			answ4 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ5)
+		{
+			rans5 = true;
+			answ5 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ6)
+		{
+			rans6 = true;
+			answ6 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ7)
+		{
+			rans7 = true;
+			answ7 = false;
+			FamilyFued.playSound("Answer.wav");
+			return;
+		}
+
+		if (answ8)
+		{
+			rans8 = true;
+			answ8 = false;
+			FamilyFued.playSound("Answer.wav");
+			FamilyFued.stage = Stage.BUZZER;
+			return;
+		}
+
+		renderQuestion = true;
+		KeyInput.canType = true;
+
+		if (buzzerWinner != null)
+		{
+			if (renderedRedTimes >= 5)
+			{
+				if (renderRed)
+				{
+					renderRed = false;
+				}
+				return;
+			}
+
+			renderedRedTimes++;
+
+			renderRed = !renderRed;
+			return;
+		}
+	}
+
+	public void render(Graphics g, ImageObserver ob)
+	{
+		if (!render)
+		{
+			return;
+		}
+
+		if (rans1)
+		{
+			g.drawImage(ans1, 0, 0, ob);
+		}
+
+		if (rans2)
+		{
+			g.drawImage(ans2, 0, 0, ob);
+		}
+
+		if (rans3)
+		{
+			g.drawImage(ans3, 0, 0, ob);
+		}
+
+		if (rans4)
+		{
+			g.drawImage(ans4, 0, 0, ob);
+		}
+
+		if (rans5)
+		{
+			g.drawImage(ans5, 0, 0, ob);
+		}
+
+		if (rans6)
+		{
+			g.drawImage(ans6, 0, 0, ob);
+		}
+
+		if (rans7)
+		{
+			g.drawImage(ans7, 0, 0, ob);
+		}
+
+		if (rans8)
+		{
+			g.drawImage(ans8, 0, 0, ob);
+		}
+
+		if (!renderQuestion)
+		{
+			return;
+		}
+
+		g.setColor(Color.white);
+		FamilyFued.drawHorizontalCenteredString(g, question.getQuestion(), new Rectangle(0, 0, 1920, 1080), 250, FamilyFued.getTTFont().deriveFont(60F));
+
+		g.setColor(Color.red);
+		g.drawString(FamilyFued.family1.getName(), 10, 60);
+		g.setColor(Color.white);
+		FamilyFued.drawHorizontalCenteredString(g, String.valueOf(FamilyFued.family1.getPoints()), new Rectangle(0, 0, g.getFontMetrics(FamilyFued.getTTFont()).stringWidth(FamilyFued.family1.getName()), 1080), 120, FamilyFued.getTTFont());
+
+		g.setColor(Color.blue);
+		FamilyFued.drawRightAlinedString(g, FamilyFued.family2.getName(), 10, 60);
+		g.setColor(Color.white);
+		FamilyFued.drawRightAlinedString(g, String.valueOf(FamilyFued.family2.getPoints()), g.getFontMetrics(FamilyFued.getTTFont()).stringWidth(FamilyFued.family2.getName()) / 2, 120);
+
+		g.setColor(Color.white);
+
+		if (person1 != null)
+		{
+			if (buzzerWinner == null)
+			{
+				g.drawString(person1, 10, 700);
+			} else if (buzzerWinner == person1)
+			{
+				if (renderRed)
+				{
+					g.setColor(Color.red);
+					g.drawString(person1, 10, 700);
+				} else
+				{
+					g.setColor(Color.white);
+					g.drawString(person1, 10, 700);
+				}
+			}
+		}
+
+		if (person2 != null)
+		{
+			if (buzzerWinner == null)
+			{
+				FamilyFued.drawRightAlinedString(g, person2, 10, 700);
+			} else if (buzzerWinner == person2)
+			{
+				if (renderRed)
+				{
+					g.setColor(Color.red);
+					FamilyFued.drawRightAlinedString(g, person2, 10, 700);
+				} else
+				{
+					g.setColor(Color.white);
+					FamilyFued.drawRightAlinedString(g, person2, 10, 700);
+				}
+			}
+		}
+
+		FamilyFued.drawHorizontalCenteredString(g, answer, new Rectangle(0, 0, 1920, 1080), 1060, FamilyFued.getTTFont());
+
+		if (renderAnswer1)
+		{
+			g.drawImage(ans1f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(0);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 420);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 420);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.getTTFont().deriveFont(48F);
+				g.drawString(answer.getAnswer(), 405, 420);
+			} else
+			{
+				FamilyFued.getTTFont().deriveFont(60F);
+				g.drawString(answer.getAnswer(), 405, 420);
+			}
+		}
+
+		if (renderAnswer2)
+		{
+			g.drawImage(ans2f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(1);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 580);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 580);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.getTTFont().deriveFont(48F);
+				g.drawString(answer.getAnswer(), 405, 580);
+			} else
+			{
+				FamilyFued.getTTFont().deriveFont(60F);
+				g.drawString(answer.getAnswer(), 405, 580);
+			}
+		}
+
+		if (renderAnswer3)
+		{
+			g.drawImage(ans3f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(2);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 740);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 740);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.getTTFont().deriveFont(48F);
+				g.drawString(answer.getAnswer(), 405, 740);
+			} else
+			{
+				FamilyFued.getTTFont().deriveFont(60F);
+				g.drawString(answer.getAnswer(), 405, 740);
+			}
+		}
+
+		if (renderAnswer4)
+		{
+			g.drawImage(ans4f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(3);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 900);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 900);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.drawStringInRect(g, answer.getAnswer(), new Rectangle(383, 815, 444, 579));
+			} else
+			{
+				g.drawString(answer.getAnswer(), 405, 900);
+			}
+		}
+
+		if (renderAnswer5)
+		{
+			g.drawImage(ans5f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(4);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 420);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 420);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.drawStringInRect(g, answer.getAnswer(), new Rectangle(383, 335, 444, 99));
+			} else
+			{
+				g.drawString(answer.getAnswer(), 405, 420);
+			}
+		}
+
+		if (renderAnswer6)
+		{
+			g.drawImage(ans6f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(5);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 420);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 420);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.drawStringInRect(g, answer.getAnswer(), new Rectangle(383, 335, 444, 99));
+			} else
+			{
+				g.drawString(answer.getAnswer(), 405, 420);
+			}
+		}
+
+		if (renderAnswer7)
+		{
+			g.drawImage(ans7f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(6);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 420);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 420);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.drawStringInRect(g, answer.getAnswer(), new Rectangle(383, 335, 444, 99));
+			} else
+			{
+				g.drawString(answer.getAnswer(), 405, 420);
+			}
+		}
+
+		if (renderAnswer8)
+		{
+			g.drawImage(ans8f, 0, 0, ob);
+
+			Answer answer = question.getAnswers().get(7);
+
+			if (String.valueOf(answer.getPoints()).length() == 2)
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 852, 420);
+			} else
+			{
+				g.drawString(String.valueOf(answer.getPoints()), 857, 420);
+			}
+
+			if (FamilyFued.getWidth(g, answer.getAnswer()) > 454)
+			{
+				FamilyFued.drawStringInRect(g, answer.getAnswer(), new Rectangle(383, 335, 444, 99));
+			} else
+			{
+				g.drawString(answer.getAnswer(), 405, 420);
+			}
+		}
+
+		if (strike1)
+		{
+			if (renderedStrikeTime > System.currentTimeMillis())
+			{
+				g.drawImage(strike, 295, 390, ob);
+			}
+		}
+
+		if (strike2)
+		{
+			if (renderedStrikeTime > System.currentTimeMillis())
+			{
+				g.drawImage(strike, 768, 390, ob);
+			}
+		}
+
+		if (strike3)
+		{
+			if (renderedStrikeTime > System.currentTimeMillis())
+			{
+				g.drawImage(strike, 1232, 390, ob);
+			}
+		}
+	}
+
+	public boolean isStarted()
+	{
+		return isStarted;
+	}
+
+	public void setBuzzerMember1(String member)
+	{
+		this.person1 = member;
+	}
+
+	public void setBuzzerMember2(String member)
+	{
+		this.person2 = member;
+	}
+
+	public void setBuzzerWinner(String winner)
+	{
+		buzzerWinner = winner;
+
+		if (FamilyFued.family1.getMembers().contains(buzzerWinner))
+		{
+			currentFamily = FamilyFued.family1;
+		}
+
+		if (FamilyFued.family2.getMembers().contains(buzzerWinner))
+		{
+			currentFamily = FamilyFued.family2;
+		}
+
+		FamilyFued.stage = Stage.ENTERING;
+	}
+
+	public void addStrike()
+	{
+		strikes++;
+
+		renderedStrikeTime = System.currentTimeMillis() + 500;
+
+		if (strikes == 1)
+		{
+			strike1 = true;
+		}
+
+		if (strikes == 2)
+		{
+			strike2 = true;
+		}
+
+		if (strikes == 3)
+		{
+			strike3 = true;
+		}
+
+		FamilyFued.playSound("Wrong.wav");
+
+		if (strikes > 3)
+		{
+			strikes = 1;
+			strike1 = true;
+			strike2 = false;
+			strike3 = false;
+		}
+	}
+
+	public void submitAnswer(String answer)
+	{
+		boolean correct = false;
+		for (Answer a : question.getAnswers())
+		{
+			if (foundAnswers.contains(a))
+			{
+				continue;
+			}
+
+			int containedAnswers = 0;
+			if (a.getAnswer().toLowerCase().contains(answer.toLowerCase()))
+			{
+				containedAnswers++;
+
+				if (containedAnswers > 1)
+				{
+					continue;
+				}
+			}
+
+			containedAnswers = 0;
+
+			if (a.getAnswer().toLowerCase().contains(answer.toLowerCase()))
+			{
+				correct = true;
+				foundAnswers.add(a);
+
+				roundPoints += a.getPoints();
+				currentFamily.addPoints(a.getPoints());
+
+				int answerNum = 0;
+
+				for (int i : answerNums.keySet())
+				{
+					if (answerNums.get(i).getAnswer().toLowerCase().contains(a.getAnswer().toLowerCase()))
+					{
+						answerNum = i;
+					}
+				}
+
+				if (answerNum == 1)
+				{
+					rans1 = false;
+					renderAnswer1 = true;
+				}
+
+				if (answerNum == 2)
+				{
+					rans2 = false;
+					renderAnswer2 = true;
+				}
+
+				if (answerNum == 3)
+				{
+					rans3 = false;
+					renderAnswer3 = true;
+				}
+
+				if (answerNum == 4)
+				{
+					rans4 = false;
+					renderAnswer4 = true;
+				}
+
+				if (answerNum == 5)
+				{
+					rans5 = false;
+					renderAnswer5 = true;
+				}
+
+				if (answerNum == 6)
+				{
+					rans6 = false;
+					renderAnswer6 = true;
+				}
+
+				if (answerNum == 7)
+				{
+					rans7 = false;
+					renderAnswer7 = true;
+				}
+
+				if (answerNum == 8)
+				{
+					rans8 = false;
+					renderAnswer8 = true;
+				}
+
+				FamilyFued.playSound("Ding.wav");
+				containedAnswers = 0;
+				break;
+			}
+		}
+
+		if (!correct)
+		{
+			addStrike();
+		}
+
+		if (currentFamily == FamilyFued.family1)
+		{
+			person1 = FamilyFued.getFamily1Member();
+			System.out.println(person1);
+		}
+
+		if (currentFamily == FamilyFued.family2)
+		{
+			person2 = FamilyFued.getFamily2Member();
+			System.out.println(person2);
+		}
+
+		this.answer = "";
+	}
+}

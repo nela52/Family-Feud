@@ -1,0 +1,388 @@
+package com.alexnelson.ff;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.ImageObserver;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class FastMoneyRound
+{
+	private boolean render = false;
+	private boolean tick = false;
+
+	private boolean isStarted = false;
+
+	public static ArrayList<Question> questions = new ArrayList<Question>();
+	public static ArrayList<String> submittedAnswers = new ArrayList<String>();
+	public static HashMap<String, Answer> answers = new HashMap<String, Answer>();
+
+	public static ArrayList<Answer> foundAnswers = new ArrayList<Answer>();
+
+	private ArrayList<Integer> answerPoints = new ArrayList<Integer>();
+
+	private static Question currentQuestion = null;
+	private static int currentQuestionNum = 0;
+
+	public String answer = "";
+
+	public static String currentMember = null;
+
+	public static String member1 = null;
+	public static String member2 = null;
+
+	private int timer = 25;
+	private boolean timerStopped = false;
+
+	private int member1Points = 0;
+	private int member2Points = 0;
+
+	private boolean checkAnswers = false;
+
+	private boolean roundOver = false;
+
+	public void start()
+	{
+		FamilyFued.stage = Stage.FAST_MONEY;
+
+		for (int i = 1; i <= 10; i++)
+		{
+			questions.add(FamilyFued.getQuestion());
+		}
+
+		currentQuestion = questions.get(currentQuestionNum);
+
+		currentQuestionNum++;
+
+		if (FamilyFued.winner == FamilyFued.family1)
+		{
+			currentMember = FamilyFued.getFamily1Member();
+
+			member1 = currentMember;
+			member2 = FamilyFued.getFamily1Member();
+		}
+
+		if (FamilyFued.winner == FamilyFued.family2)
+		{
+			currentMember = FamilyFued.getFamily2Member();
+
+			member1 = currentMember;
+			member2 = FamilyFued.getFamily2Member();
+		}
+
+		isStarted = true;
+		tick = true;
+		render = true;
+
+		KeyInput.canType = true;
+	}
+
+	public void tick()
+	{
+		if (!tick)
+		{
+			return;
+		}
+
+		if (roundOver)
+		{
+			onRoundOver();
+		}
+
+		updateTimer();
+
+		if (checkAnswers)
+		{
+			onCheckAnswers();
+		}
+	}
+
+	public void render(Graphics g, ImageObserver ob)
+	{
+		if (!render)
+		{
+			return;
+		}
+
+		g.setColor(Color.red);
+		g.drawString(member1, 10, 60);
+		g.setColor(Color.white);
+		FamilyFued.drawHorizontalCenteredString(g, String.valueOf(member1Points), new Rectangle(0, 0, g.getFontMetrics(FamilyFued.getTTFont()).stringWidth(member1), 1080), 120, FamilyFued.getTTFont());
+
+		g.setColor(Color.blue);
+		FamilyFued.drawRightAlinedString(g, member2, 10, 60);
+		g.setColor(Color.white);
+		FamilyFued.drawRightAlinedString(g, String.valueOf(member2Points), g.getFontMetrics(FamilyFued.getTTFont()).stringWidth(member2) / 2, 120);
+
+		FamilyFued.drawHorizontalCenteredString(g, String.valueOf(timer), new Rectangle(0, 0, 1920, 1080), 100, FamilyFued.getTTFont());
+
+		FamilyFued.drawHorizontalCenteredString(g, answer, new Rectangle(0, 0, 1920, 1080), 1060, FamilyFued.getTTFont());
+
+		if (currentQuestion == null)
+		{
+			return;
+		}
+
+		FamilyFued.drawHorizontalCenteredString(g, currentQuestion.getQuestion(), new Rectangle(0, 0, 1920, 1080), 250, FamilyFued.getTTFont().deriveFont(60F));
+
+		for (int i = 0; i < submittedAnswers.size(); i++)
+		{
+			String answer = submittedAnswers.get(i);
+
+			if (i == 0)
+			{
+				g.drawString(answer, 330, 335);
+			}
+
+			if (i == 1)
+			{
+				g.drawString(answer, 330, 435);
+			}
+
+			if (i == 2)
+			{
+				g.drawString(answer, 330, 535);
+			}
+
+			if (i == 3)
+			{
+				g.drawString(answer, 330, 635);
+			}
+
+			if (i == 4)
+			{
+				g.drawString(answer, 330, 735);
+			}
+
+			if (i == 5)
+			{
+				g.drawString(answer, 980, 335);
+			}
+
+			if (i == 6)
+			{
+				g.drawString(answer, 980, 435);
+			}
+
+			if (i == 7)
+			{
+				g.drawString(answer, 980, 535);
+			}
+
+			if (i == 8)
+			{
+				g.drawString(answer, 980, 635);
+			}
+
+			if (i == 9)
+			{
+				g.drawString(answer, 980, 735);
+			}
+		}
+
+		int ran = 0;
+		for (String a : answers.keySet())
+		{
+			Answer answer = answers.get(a);
+			int points = answer.getPoints();
+
+			if (ran == 0)
+			{
+				if (answer.getPoints() != points)
+				{
+					continue;
+				}
+
+				if (String.valueOf(points).length() < 2)
+				{
+					g.drawString(String.valueOf(points), 870, 340);
+				} else
+				{
+					g.drawString(String.valueOf(points), 855, 340);
+				}
+			}
+
+			if (ran == 1)
+			{
+				if (answer.getPoints() != points)
+				{
+					continue;
+				}
+
+				if (String.valueOf(points).length() < 2)
+				{
+					g.drawString(String.valueOf(points), 870, 435);
+				} else
+				{
+					g.drawString(String.valueOf(points), 855, 435);
+				}
+			}
+
+			if (ran == 2)
+			{
+				if (answer.getPoints() != points)
+				{
+					continue;
+				}
+
+				if (String.valueOf(points).length() < 2)
+				{
+					g.drawString(String.valueOf(points), 870, 535);
+				} else
+				{
+					g.drawString(String.valueOf(points), 855, 535);
+				}
+			}
+
+			if (ran == 3)
+			{
+				if (answer.getPoints() != points)
+				{
+					continue;
+				}
+
+				if (String.valueOf(points).length() < 2)
+				{
+					g.drawString(String.valueOf(points), 870, 635);
+				} else
+				{
+					g.drawString(String.valueOf(points), 855, 635);
+				}
+
+			}
+
+			if (ran == 4)
+			{
+				if (answer.getPoints() != points)
+				{
+					continue;
+				}
+
+				if (String.valueOf(points).length() < 2)
+				{
+					g.drawString(String.valueOf(points), 870, 735);
+				} else
+				{
+					g.drawString(String.valueOf(points), 855, 735);
+				}
+			}
+
+			ran++;
+		}
+	}
+
+	private int time = 0;
+
+	public void updateTimer()
+	{
+		if (timerStopped)
+		{
+			return;
+		}
+
+		time++;
+		if (time < 60)
+		{
+			return;
+		}
+
+		time = 0;
+
+		if (timer == 0)
+		{
+			timerStopped = true;
+			FamilyFued.playSound("Wrong.wav");
+			KeyInput.canType = false;
+			return;
+		}
+
+		timer--;
+	}
+
+	public boolean isStarted()
+	{
+		return isStarted;
+	}
+
+	public void submitAnswer(String answer)
+	{
+		submittedAnswers.add(answer);
+
+		if (submittedAnswers.size() == 5)
+		{
+			checkAnswers = true;
+			timerStopped = true;
+			KeyInput.canType = false;
+			return;
+		}
+
+		currentQuestion = questions.get(currentQuestionNum++);
+
+		this.answer = "";
+	}
+
+	public void checkAnswer(String answer)
+	{
+		boolean correct = false;
+
+		FamilyFued.playSound("FMA.wav");
+
+		for (Answer a : currentQuestion.getAnswers())
+		{
+			if (a.getAnswer().toLowerCase().contains(answer.toLowerCase()))
+			{
+				if (foundAnswers.contains(a))
+				{
+					FamilyFued.playSound("FMS.wav");
+					return;
+				}
+
+				correct = true;
+				answers.put(answer, a);
+				foundAnswers.add(a);
+				
+				answerPoints.add(a.getPoints());
+
+				FamilyFued.playSound("FMD.wav");
+
+				break;
+			}
+		}
+
+		if (!correct)
+		{
+			FamilyFued.playSound("Wrong.wav");
+		}
+	}
+
+	private int cat = 0;
+
+	public void onCheckAnswers()
+	{
+		cat++;
+
+		if (cat < 300)
+		{
+			return;
+		}
+
+		cat = 0;
+
+		currentQuestionNum = 0;
+		for (String answer : submittedAnswers)
+		{
+			currentQuestion = questions.get(currentQuestionNum);
+			System.out.println("CHECKING " + answer);
+			checkAnswer(answer);
+			currentQuestionNum++;
+		}
+
+		checkAnswers = false;
+	}
+
+	public void onRoundOver()
+	{
+
+	}
+}

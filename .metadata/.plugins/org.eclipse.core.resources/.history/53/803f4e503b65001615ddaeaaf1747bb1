@@ -1,0 +1,6 @@
+package com.alexnelson.ff;
+
+public class Font
+{
+	//private static SpriteSheet font = new SpriteSheet(image)
+}

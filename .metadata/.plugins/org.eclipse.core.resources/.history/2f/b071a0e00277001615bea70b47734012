@@ -1,0 +1,737 @@
+package com.alexnelson.ff;
+
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineMetrics;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+
+public class FamilyFued extends Canvas implements Runnable
+{
+	private static final long serialVersionUID = -5636455297197163180L;
+
+	public static final int WIDTH = 1920, HEIGHT = 1080;
+
+	private Thread thread;
+
+	private boolean running = false;
+
+	private BufferedImage intro = null;
+	private BufferedImage background = null;
+	private BufferedImage fastMoneyBackground = null;
+	private BufferedImage textBox = null;
+
+	public static String name = "";
+	public static boolean ef2n = false;
+	public static boolean rEF = true;
+
+	public static String family1Name = "";
+	public static String family2Name = "";
+
+	public static String personName = "";
+
+	public static ArrayList<String> family1Names = new ArrayList<String>();
+	public static ArrayList<String> family2Names = new ArrayList<String>();
+
+	public static Family family1;
+	public static Family family2;
+
+	public static ArrayList<String> usedFamily1 = new ArrayList<String>();
+	public static ArrayList<String> usedFamily2 = new ArrayList<String>();
+
+	public static String buzzerMember1 = "";
+	public static String buzzerMember2 = "";
+
+	public static Family winner = null;
+
+	public static Stage stage = Stage.INTRO;
+
+	public static Round round;
+
+	public int roundNum = 1;
+
+	public static SuddenDeathRound suddenDeathRound = null;
+
+	public static FastMoneyRound fastMoneyRound = null;
+
+	public static int pointMultiplier = 1;
+
+	public static ArrayList<Question> questions = new ArrayList<Question>();
+	public static ArrayList<Question> usedQuestions = new ArrayList<Question>();
+
+	public static String questionsDir = System.getProperty("user.home") + File.separatorChar + "Desktop";
+
+	public static ArrayList<String> lines = new ArrayList<String>();
+
+	private static Font font;
+
+	public void init()
+	{
+		BufferedImageLoader loader = new BufferedImageLoader();
+		try
+		{
+			intro = loader.loadImage("/intro.png");
+			background = loader.loadImage("/background.png");
+			fastMoneyBackground = loader.loadImage("/fmb.png");
+			textBox = loader.loadImage("/textBox.png");
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		try
+		{
+			font = Font.createFont(Font.TRUETYPE_FONT, getClass().getResourceAsStream("/clarenbd.ttf"));
+		} catch (FontFormatException | IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		font = font.deriveFont(72F);
+	}
+
+	public FamilyFued()
+	{
+		addKeyListener(new KeyInput());
+
+		new Window(WIDTH, HEIGHT, "Family Feud", this);
+
+		loadQuestions();
+
+		round = new Round();
+	}
+
+	public synchronized void start()
+	{
+		thread = new Thread(this);
+		thread.start();
+		running = true;
+	}
+
+	public synchronized void stop()
+	{
+		try
+		{
+			thread.join();
+			running = false;
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public synchronized void run()
+	{
+		requestFocus();
+		init();
+		long lastTime = System.nanoTime();
+		double amountOfTicks = 60.0;
+		double ns = 1000000000 / amountOfTicks;
+		double delta = 0;
+		long timer = System.currentTimeMillis();
+		int frames = 0;
+		int ticks = 0;
+		while (running)
+		{
+			long now = System.nanoTime();
+			delta += (now - lastTime) / ns;
+			lastTime = now;
+			while (delta >= 1)
+			{
+				tick();
+				ticks++;
+				delta--;
+			}
+
+			if (running)
+			{
+				render();
+			}
+
+			frames++;
+
+			if (System.currentTimeMillis() - timer > 1000)
+			{
+				timer += 1000;
+				System.out.println("FPS: " + frames + ", Ticks: " + ticks);
+				ticks = 0;
+				frames = 0;
+			}
+		}
+		stop();
+	}
+
+	private void tick()
+	{
+		if (round != null)
+		{
+			if (!round.isStarted())
+			{
+				return;
+			}
+
+			round.tick();
+
+			if (round.isDone())
+			{
+				round.stop();
+
+				round = null;
+
+				roundNum++;
+
+				pointMultiplier++;
+
+				if (roundNum > 3)
+				{
+					if (family1.getPoints() >= 200)
+					{
+						if (family2.getPoints() < family1.getPoints())
+						{
+							winner = family1;
+
+							fastMoneyRound = new FastMoneyRound();
+							fastMoneyRound.start();
+						}
+					}
+
+					if (family2.getPoints() >= 200)
+					{
+						if (family1.getPoints() < family2.getPoints())
+						{
+							winner = family2;
+
+							fastMoneyRound = new FastMoneyRound();
+							fastMoneyRound.start();
+						}
+					}
+
+					if (family1.getPoints() < 200 && family2.getPoints() < 200)
+					{
+						suddenDeathRound = new SuddenDeathRound();
+						suddenDeathRound.start();
+					}
+
+					return;
+				}
+
+				round = new Round();
+
+				round.start();
+
+			}
+		}
+
+		if (suddenDeathRound != null)
+		{
+			if (!suddenDeathRound.isStarted())
+			{
+				return;
+			}
+
+			suddenDeathRound.tick();
+
+			if (suddenDeathRound.isDone())
+			{
+				suddenDeathRound.stop();
+
+				suddenDeathRound = null;
+
+				fastMoneyRound = new FastMoneyRound();
+				fastMoneyRound.start();
+			}
+
+			return;
+		}
+
+		if (fastMoneyRound != null)
+		{
+			if (!fastMoneyRound.isStarted())
+			{
+				return;
+			}
+
+			fastMoneyRound.tick();
+		}
+	}
+
+	private void render()
+	{
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null)
+		{
+			createBufferStrategy(3);
+			return;
+		}
+
+		Graphics g = bs.getDrawGraphics();
+
+		g.clearRect(0, 0, WIDTH, HEIGHT);
+
+		g.setColor(Color.white);
+		g.setFont(font);
+
+		if (rEF)
+		{
+			g.drawImage(intro, 0, 0, this);
+
+			if (stage == Stage.INTRO)
+			{
+				drawHorizontalCenteredString(g, "Enter Family 1 Name:", new Rectangle(0, 0, 1920, 1080), 685, font);
+			}
+
+			if (stage == Stage.FAMILY1)
+			{
+				drawHorizontalCenteredString(g, "Enter " + family1Name + " Members:", new Rectangle(0, 0, 1920, 1080), 685, font);
+			}
+
+			if (stage == Stage.AF2)
+			{
+				drawHorizontalCenteredString(g, "Enter Family 2 Name:", new Rectangle(0, 0, 1920, 1080), 685, font);
+			}
+
+			if (stage == Stage.FAMILY2)
+			{
+				drawHorizontalCenteredString(g, "Enter " + family2Name + " Members:", new Rectangle(0, 0, 1920, 1080), 685, font);
+			}
+
+			g.drawImage(textBox, 550, 710, this);
+		} else
+		{
+			if (stage == Stage.FAST_MONEY)
+			{
+				g.drawImage(fastMoneyBackground, 0, 0, this);
+			} else
+			{
+				g.drawImage(background, 0, 0, this);
+			}
+		}
+
+		g.setColor(Color.black);
+
+		g.drawString(name, 555, 780);
+
+		g.drawString(personName, 555, 780);
+
+		if (round != null)
+		{
+			if (round.isStarted())
+			{
+				round.render(g, this);
+			}
+		}
+
+		if (suddenDeathRound != null)
+		{
+			if (suddenDeathRound.isStarted())
+			{
+				suddenDeathRound.render(g, this);
+			}
+		}
+
+		if (fastMoneyRound != null)
+		{
+			if (fastMoneyRound.isStarted())
+			{
+				fastMoneyRound.render(g, this);
+			}
+		}
+
+		g.dispose();
+		bs.show();
+	}
+	
+	public void onWin()
+	{
+		
+	}
+
+	public static void drawCenteredString(Graphics g, String text, Rectangle rect, Font font)
+	{
+		// Get the FontMetrics
+		FontMetrics metrics = g.getFontMetrics(font);
+		// Determine the X coordinate for the text
+		int x = (rect.width - metrics.stringWidth(text)) / 2;
+		// Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+		int y = ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+		// Set the font
+		g.setFont(font);
+		// Draw the String
+		g.drawString(text, x, y);
+		// Dispose the Graphics
+		g.dispose();
+	}
+
+	public static void drawHorizontalCenteredString(Graphics g, String text, Rectangle rect, int y, Font font)
+	{
+		// Get the FontMetrics
+		FontMetrics metrics = g.getFontMetrics(font);
+		// Determine the X coordinate for the text
+		int x = (rect.width - metrics.stringWidth(text)) / 2;
+		// Set the font
+		g.setFont(font);
+		// Draw the String
+		g.drawString(text, x, y);
+		// Dispose the Graphics
+		//g.dispose();
+	}
+
+	public static void drawVerticalCenteredString(Graphics g, String text, Rectangle rect, int x, Font font)
+	{
+		// Get the FontMetrics
+		FontMetrics metrics = g.getFontMetrics(font);
+		// Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+		int y = ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+		// Set the font
+		g.setFont(font);
+		// Draw the String
+		g.drawString(text, x, y);
+		// Dispose the Graphics
+		g.dispose();
+	}
+
+	public static void drawRightAlinedString(Graphics g, String text, int padding, int y)
+	{
+		int total_width = 1920;
+		int actual_width = g.getFontMetrics().stringWidth(text);
+		int x = total_width - actual_width - padding;
+		g.drawString(text, x, y);
+	}
+
+	public static void drawString(Graphics g, String text, int x, int y, Font font)
+	{
+		g.setFont(font);
+		g.drawString(text, x, y);
+	}
+
+	public static void addFamalies()
+	{
+		family1 = new Family(family1Name);
+		for (String member : family1Names)
+		{
+			family1.addMember(member);
+		}
+
+		family2 = new Family(family2Name);
+		for (String member : family2Names)
+		{
+			family2.addMember(member);
+		}
+	}
+
+	public static void getBuzzerMembers()
+	{
+		if (usedFamily1.size() == family1.getMembers().size())
+		{
+			usedFamily1.clear();
+		}
+
+		for (String member : family1.getMembers())
+		{
+			if (!usedFamily1.contains(member))
+			{
+				buzzerMember1 = member;
+				usedFamily1.add(member);
+				break;
+			}
+		}
+
+		if (usedFamily1.size() == family2.getMembers().size())
+		{
+			usedFamily1.clear();
+		}
+
+		for (String member : family2.getMembers())
+		{
+			if (!usedFamily2.contains(member))
+			{
+				buzzerMember2 = member;
+				usedFamily1.add(member);
+				break;
+			}
+		}
+	}
+
+	public static String getFamily1Member()
+	{
+		int size = 0;
+		for (int i = 1; i <= family1.getMembers().size(); i++)
+		{
+			if (usedFamily1.contains(family1.getMembers().get(i - 1)))
+			{
+				size++;
+			}
+		}
+
+		if (size == family1.getMembers().size())
+		{
+			usedFamily1.clear();
+		}
+
+		String person = null;
+		for (String member : family1.getMembers())
+		{
+			if (usedFamily1.contains(member))
+			{
+				continue;
+			}
+
+			usedFamily1.add(member);
+			person = member;
+			break;
+		}
+
+		return person;
+	}
+
+	public static String getFamily2Member()
+	{
+		int size = 0;
+		for (int i = 1; i <= family2.getMembers().size(); i++)
+		{
+			if (usedFamily2.contains(family2.getMembers().get(i - 1)))
+			{
+				size++;
+			}
+		}
+
+		if (size == family2.getMembers().size())
+		{
+			usedFamily2.clear();
+		}
+
+		String person = null;
+		for (String member : family2.getMembers())
+		{
+			if (usedFamily2.contains(member))
+			{
+				continue;
+			}
+
+			usedFamily2.add(member);
+			person = member;
+			break;
+		}
+
+		return person;
+	}
+
+	public static ArrayList<String> loadTextFile(String path, String name) throws IOException
+	{
+		ArrayList<String> lines = new ArrayList<String>();
+
+		BufferedReader br = new BufferedReader(new FileReader(new File(path, name)));
+		try
+		{
+			StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+
+			while (line != null)
+			{
+				lines.add(line);
+				sb.append(line);
+				sb.append(System.lineSeparator());
+				line = br.readLine();
+			}
+		} finally
+		{
+			br.close();
+		}
+
+		return lines;
+	}
+
+	public static void loadQuestions()
+	{
+		try
+		{
+			for (String line : loadTextFile(questionsDir, "Family Fued.txt"))
+			{
+				lines.add(line);
+			}
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		for (int i = 0; i < lines.size(); i++)
+		{
+			String line = lines.get(i);
+
+			if (line.isEmpty())
+			{
+				continue;
+			}
+
+			if (line.endsWith("?") || line.endsWith("."))
+			{
+				String q = line;
+
+				Question question = new Question(q);
+
+				ArrayList<Answer> answers = new ArrayList<Answer>();
+				for (int j = i + 1; j < 100; j++)
+				{
+					if (lines.get(j).isEmpty())
+					{
+						break;
+					}
+
+					String answerLine = lines.get(j);
+
+					String answer = "";
+					int points = 0;
+					for (String part : answerLine.split(" "))
+					{
+						if (!isNumber(part))
+						{
+							answer = answer + " " + part;
+						} else
+						{
+							points = Integer.parseInt(part);
+						}
+					}
+
+					answers.add(new Answer(answer.trim(), points));
+				}
+
+				for (Answer answer : answers)
+				{
+					question.addAnswer(answer);
+				}
+
+				questions.add(question);
+			}
+		}
+
+		ArrayList<Question> badQs = new ArrayList<Question>();
+		for (Question question : questions)
+		{
+			if (question.getAnswers().isEmpty())
+			{
+				badQs.add(question);
+			}
+		}
+
+		for (Question question : badQs)
+		{
+			questions.remove(question);
+		}
+	}
+
+	public static Question getQuestion()
+	{
+		Question question = null;
+
+		if (usedQuestions.size() == questions.size())
+		{
+			usedQuestions.clear();
+		}
+
+		question = questions.get(new Random().nextInt(FamilyFued.questions.size()));
+		while (usedQuestions.contains(question))
+		{
+			question = questions.get(new Random().nextInt(FamilyFued.questions.size()));
+		}
+
+		usedQuestions.add(question);
+		return question;
+	}
+
+	public static boolean isNumber(String string)
+	{
+		try
+		{
+			Integer.parseInt(string);
+		} catch (NumberFormatException e)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public static synchronized void playSound(final String name)
+	{
+		new Thread(new Runnable()
+		{
+			// The wrapper thread is unnecessary, unless it blocks on the
+			// Clip finishing; see comments.
+			public void run()
+			{
+				try
+				{
+					Clip clip = AudioSystem.getClip();
+					AudioInputStream inputStream = AudioSystem.getAudioInputStream(getClass().getResourceAsStream("/" + name));
+					clip.open(inputStream);
+					clip.start();
+				} catch (Exception e)
+				{
+					System.err.println(e.getMessage());
+				}
+			}
+		}).start();
+	}
+
+	public static Font getTTFont()
+	{
+		return font;
+	}
+
+	public static Font scaleFont(String text, Rectangle rect, Graphics g, Font pFont)
+	{
+		float fontSize = 20F;
+		Font font = pFont;
+
+		font = g.getFont().deriveFont(fontSize);
+		int width = g.getFontMetrics(font).stringWidth(text);
+		fontSize = (rect.width / width) * fontSize;
+		return g.getFont().deriveFont(fontSize);
+	}
+
+	public static void drawStringInRect(Graphics g, String text, Rectangle rect)
+	{
+		Graphics2D g2 = (Graphics2D) g;
+		FontRenderContext frc = g2.getFontRenderContext();
+		float sw = (float) font.getStringBounds(text, frc).getWidth();
+		LineMetrics lm = font.getLineMetrics(text, frc);
+		float sh = lm.getAscent() + lm.getDescent();
+
+		double xScale = rect.width / sw;
+		double yScale = rect.height / sh;
+		double x = rect.x + xScale * (rect.width - xScale * sw) / 2;
+		double y = rect.getMaxY() - yScale * lm.getDescent();
+		AffineTransform at = AffineTransform.getTranslateInstance(x, y);
+		at.scale(xScale, yScale);
+		g2.setFont(font.deriveFont(at));
+		g2.drawString(text, 0, 0);
+	}
+
+	public static int getWidth(Graphics g, String text)
+	{
+		return g.getFontMetrics().stringWidth(text);
+	}
+
+	public static void main(String[] args) throws IOException
+	{
+		new FamilyFued();
+	}
+}

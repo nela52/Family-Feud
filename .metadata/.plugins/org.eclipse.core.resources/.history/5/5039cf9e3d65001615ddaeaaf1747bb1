@@ -1,0 +1,29 @@
+package com.alexnelson.ff;
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class KeyInput extends KeyAdapter
+{
+	public KeyInput()
+	{
+
+	}
+
+	public void keyPressed(KeyEvent e)
+	{
+		int key = e.getKeyCode();
+		String keyText = KeyEvent.getKeyText(key);
+		char c = keyText.charAt(0);
+		if(!Character.isLetter(c))
+		{
+			return;
+		}
+		FamilyFued.name = FamilyFued.name + keyText;
+	}
+
+	public void keyReleased(KeyEvent e)
+	{
+		int key = e.getKeyCode();
+	}
+}

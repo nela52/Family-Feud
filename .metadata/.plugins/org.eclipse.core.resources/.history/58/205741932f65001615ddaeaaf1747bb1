@@ -1,0 +1,19 @@
+package com.alexnelson.ff;
+
+import java.util.ArrayList;
+
+public class Family
+{
+	private String name;
+	private ArrayList<String> members = new ArrayList<String>();
+	
+	public Family(String name)
+	{
+		this.name = name;
+	}
+	
+	public void addMember(String name)
+	{
+		members.add(name);
+	}
+}

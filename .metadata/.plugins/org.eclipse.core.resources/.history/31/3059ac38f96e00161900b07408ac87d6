@@ -1,0 +1,459 @@
+package com.alexnelson.ff;
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+
+public class KeyInput extends KeyAdapter
+{
+	public static boolean canType = true;
+
+	private ArrayList<Integer> letters = new ArrayList<Integer>();
+
+	public KeyInput()
+	{
+		letters.add(81);
+		letters.add(87);
+		letters.add(69);
+		letters.add(82);
+		letters.add(84);
+		letters.add(89);
+		letters.add(85);
+		letters.add(73);
+		letters.add(79);
+		letters.add(80);
+		letters.add(65);
+		letters.add(83);
+		letters.add(68);
+		letters.add(70);
+		letters.add(71);
+		letters.add(72);
+		letters.add(74);
+		letters.add(75);
+		letters.add(76);
+		letters.add(90);
+		letters.add(88);
+		letters.add(67);
+		letters.add(86);
+		letters.add(66);
+		letters.add(78);
+		letters.add(77);
+	}
+
+	public void keyPressed(KeyEvent e)
+	{
+		if (!canType)
+		{
+			return;
+		}
+
+		if (FamilyFued.stage == Stage.FAMILY1)
+		{
+			//End
+			if (e.getKeyCode() == 35)
+			{
+				FamilyFued.stage = Stage.AF2;
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Enter
+			if (e.getKeyCode() == 10)
+			{
+				if (FamilyFued.personName.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.family1Names.add(FamilyFued.personName);
+				FamilyFued.personName = "";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Space
+			if (e.getKeyCode() == 32)
+			{
+				FamilyFued.personName = FamilyFued.personName + " ";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Backspace
+			if (e.getKeyCode() == 8)
+			{
+				if (FamilyFued.personName.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.personName = removeLastChar(FamilyFued.personName);
+
+				FamilyFued.playSound("Key.wav");
+			}
+
+			if (!letters.contains(e.getKeyCode()))
+			{
+				return;
+			}
+
+			if (FamilyFued.personName.length() >= 11)
+			{
+				return;
+			}
+
+			FamilyFued.playSound("Key.wav");
+
+			if (FamilyFued.personName.length() == 0)
+			{
+				char c = Character.toUpperCase(e.getKeyChar());
+				FamilyFued.personName = FamilyFued.personName + c;
+				return;
+			}
+
+			FamilyFued.personName = FamilyFued.personName + e.getKeyChar();
+		}
+
+		if (FamilyFued.stage == Stage.FAMILY2)
+		{
+			//End
+			if (e.getKeyCode() == 35)
+			{
+				FamilyFued.rEF = false;
+				FamilyFued.addFamalies();
+				FamilyFued.round.start();
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Enter
+			if (e.getKeyCode() == 10)
+			{
+				if (FamilyFued.personName.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.family2Names.add(FamilyFued.personName);
+				FamilyFued.personName = "";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Space
+			if (e.getKeyCode() == 32)
+			{
+				FamilyFued.personName = FamilyFued.personName + " ";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Backspace
+			if (e.getKeyCode() == 8)
+			{
+				if (FamilyFued.personName.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.personName = removeLastChar(FamilyFued.personName);
+
+				FamilyFued.playSound("Key.wav");
+			}
+
+			if (!letters.contains(e.getKeyCode()))
+			{
+				return;
+			}
+
+			if (FamilyFued.personName.length() >= 11)
+			{
+				return;
+			}
+
+			FamilyFued.playSound("Key.wav");
+
+			if (FamilyFued.personName.length() == 0)
+			{
+				char c = Character.toUpperCase(e.getKeyChar());
+				FamilyFued.personName = FamilyFued.personName + c;
+				return;
+			}
+
+			FamilyFued.personName = FamilyFued.personName + e.getKeyChar();
+		}
+
+		if (FamilyFued.stage == Stage.INTRO)
+		{
+			//Enter
+			if (e.getKeyCode() == 10)
+			{
+				if (FamilyFued.name.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.family1Name = FamilyFued.name;
+				FamilyFued.name = "";
+				FamilyFued.playSound("Key.wav");
+				FamilyFued.stage = Stage.FAMILY1;
+				return;
+			}
+
+			//Space
+			if (e.getKeyCode() == 32)
+			{
+				FamilyFued.name = FamilyFued.name + " ";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Backspace
+			if (e.getKeyCode() == 8)
+			{
+				if (FamilyFued.name.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.name = removeLastChar(FamilyFued.name);
+
+				FamilyFued.playSound("Key.wav");
+			}
+
+			if (!letters.contains(e.getKeyCode()))
+			{
+				return;
+			}
+
+			if (FamilyFued.name.length() >= 11)
+			{
+				return;
+			}
+
+			FamilyFued.playSound("Key.wav");
+
+			if (FamilyFued.name.length() == 0)
+			{
+				char c = Character.toUpperCase(e.getKeyChar());
+				FamilyFued.name = FamilyFued.name + c;
+				return;
+			}
+
+			FamilyFued.name = FamilyFued.name + e.getKeyChar();
+		}
+
+		if (FamilyFued.stage == Stage.AF2)
+		{
+			//Enter
+			if (e.getKeyCode() == 10)
+			{
+				if (FamilyFued.name.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.family2Name = FamilyFued.name;
+				FamilyFued.name = "";
+				FamilyFued.playSound("Key.wav");
+				FamilyFued.stage = Stage.FAMILY2;
+				return;
+			}
+
+			//Space
+			if (e.getKeyCode() == 32)
+			{
+				FamilyFued.name = FamilyFued.name + " ";
+				FamilyFued.playSound("Key.wav");
+				return;
+			}
+
+			//Backspace
+			if (e.getKeyCode() == 8)
+			{
+				if (FamilyFued.name.length() == 0)
+				{
+					return;
+				}
+
+				FamilyFued.name = removeLastChar(FamilyFued.name);
+
+				FamilyFued.playSound("Key.wav");
+			}
+
+			if (!letters.contains(e.getKeyCode()))
+			{
+				return;
+			}
+
+			if (FamilyFued.name.length() >= 11)
+			{
+				return;
+			}
+
+			FamilyFued.playSound("Key.wav");
+
+			if (FamilyFued.name.length() == 0)
+			{
+				char c = Character.toUpperCase(e.getKeyChar());
+				FamilyFued.name = FamilyFued.name + c;
+				return;
+			}
+
+			FamilyFued.name = FamilyFued.name + e.getKeyChar();
+		}
+
+		if (FamilyFued.stage == Stage.BUZZER)
+		{
+			//Q: player 1
+			if (e.getKeyCode() == 81)
+			{
+				if (FamilyFued.round != null)
+				{
+					FamilyFued.round.setBuzzerWinner(FamilyFued.buzzerMember1);
+					FamilyFued.playSound("Buzzer.wav");
+					return;
+				}
+
+				if (FamilyFued.suddenDeathRound != null)
+				{
+					FamilyFued.suddenDeathRound.setBuzzerWinner(FamilyFued.buzzerMember1);
+					FamilyFued.playSound("Buzzer.wav");
+					return;
+				}
+			}
+
+			//P: player 2
+			if (e.getKeyCode() == 80)
+			{
+				if (FamilyFued.round != null)
+				{
+					FamilyFued.round.setBuzzerWinner(FamilyFued.buzzerMember2);
+					FamilyFued.playSound("Buzzer.wav");
+					return;
+				}
+
+				if (FamilyFued.suddenDeathRound != null)
+				{
+					FamilyFued.suddenDeathRound.setBuzzerWinner(FamilyFued.buzzerMember2);
+					FamilyFued.playSound("Buzzer.wav");
+					return;
+				}
+			}
+		}
+
+		if (FamilyFued.stage == Stage.ENTERING)
+		{
+			if (FamilyFued.round != null)
+			{
+				//Enter
+				if (e.getKeyCode() == 10)
+				{
+					if (FamilyFued.round.answer.length() < 3)
+					{
+						return;
+					}
+
+					canType = false;
+					FamilyFued.round.submitAnswer(FamilyFued.round.answer);
+					return;
+				}
+
+				//Space
+				if (e.getKeyCode() == 32)
+				{
+					FamilyFued.round.answer = FamilyFued.round.answer + " ";
+					FamilyFued.playSound("Key.wav");
+					return;
+				}
+
+				//Backspace
+				if (e.getKeyCode() == 8)
+				{
+					if (FamilyFued.round.answer.length() == 0)
+					{
+						return;
+					}
+
+					FamilyFued.round.answer = removeLastChar(FamilyFued.round.answer);
+
+					FamilyFued.playSound("Key.wav");
+				}
+
+				if (!letters.contains(e.getKeyCode()))
+				{
+					return;
+				}
+
+				FamilyFued.playSound("Key.wav");
+
+				if (FamilyFued.round.answer.length() == 0)
+				{
+					char c = Character.toUpperCase(e.getKeyChar());
+					FamilyFued.round.answer = FamilyFued.round.answer + c;
+					return;
+				}
+
+				FamilyFued.round.answer = FamilyFued.round.answer + e.getKeyChar();
+			}
+
+			if (FamilyFued.suddenDeathRound != null)
+			{
+				//Enter
+				if (e.getKeyCode() == 10)
+				{
+					if (FamilyFued.suddenDeathRound.answer.length() < 3)
+					{
+						return;
+					}
+
+					canType = false;
+					FamilyFued.suddenDeathRound.submitAnswer(FamilyFued.round.answer);
+					return;
+				}
+
+				//Space
+				if (e.getKeyCode() == 32)
+				{
+					FamilyFued.suddenDeathRound.answer = FamilyFued.round.answer + " ";
+					FamilyFued.playSound("Key.wav");
+					return;
+				}
+
+				//Backspace
+				if (e.getKeyCode() == 8)
+				{
+					if (FamilyFued.suddenDeathRound.answer.length() == 0)
+					{
+						return;
+					}
+
+					FamilyFued.suddenDeathRound.answer = removeLastChar(FamilyFued.round.answer);
+
+					FamilyFued.playSound("Key.wav");
+				}
+
+				if (!letters.contains(e.getKeyCode()))
+				{
+					return;
+				}
+
+				FamilyFued.playSound("Key.wav");
+
+				if (FamilyFued.suddenDeathRound.answer.length() == 0)
+				{
+					char c = Character.toUpperCase(e.getKeyChar());
+					FamilyFued.suddenDeathRound.answer = FamilyFued.round.answer + c;
+					return;
+				}
+
+				FamilyFued.suddenDeathRound.answer = FamilyFued.round.answer + e.getKeyChar();
+			}
+		}
+	}
+
+	private static String removeLastChar(String str)
+	{
+		return str.substring(0, str.length() - 1);
+	}
+}

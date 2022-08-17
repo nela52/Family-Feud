@@ -1,0 +1,50 @@
+package com.alexnelson.ff;
+
+import java.util.ArrayList;
+
+public class Family
+{
+	private String name;
+	private ArrayList<String> members = new ArrayList<String>();
+	private int points = 0;
+
+	public Family(String name)
+	{
+		this.name = name;
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void addMember(String memberName)
+	{
+		members.add(memberName);
+	}
+
+	public ArrayList<String> getMembers()
+	{
+		return members;
+	}
+
+	public void addPoints(int amnt)
+	{
+		points += amnt;
+	}
+
+	public void removePoints(int amnt)
+	{
+		points -= amnt;
+	}
+
+	public void setPoints(int amnt)
+	{
+		points = amnt;
+	}
+
+	public int getPoints()
+	{
+		return points;
+	}
+}
